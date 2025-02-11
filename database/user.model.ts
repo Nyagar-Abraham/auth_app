@@ -27,6 +27,7 @@ const userSchema: Schema = new mongoose.Schema<IUser>({
     type: String,
     required: [true, "Please provide a password"],
     minlength: 8,
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -52,6 +53,13 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-const User = models.User || model<IUser>("User", userSchema);
+userSchema.methods.correctPassword = function (
+  candidatePassword: string,
+  userPassword: string
+) {
+  return bcrypt.compare(candidatePassword, userPassword);
+};
+
+const User = models?.User || model<IUser>("User", userSchema);
 
 export default User;
