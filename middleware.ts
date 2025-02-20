@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
 
 export async function middleware(req: NextRequest) {
   try {
@@ -10,20 +10,20 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    let payload;
-    try {
-      payload = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
+    // try {
+    //   // const secretKey = new TextEncoder().encode(secret);
+    //   const payload = await jwtVerify(token, process.env.JWT_SECRET);
+    //   console.log("Verified payload:", payload);
+    //   return payload;
+    // } catch (error) {
+    //   console.error("JWT verification failed:", error);
 
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("X-User-Id", payload.id);
+    //   return NextResponse.redirect(new URL("/login", req.url));
+    // }
 
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    return NextResponse.next();
   } catch (error) {
+    console.log(error);
     return NextResponse.redirect(new URL("/login", req.url));
   }
 }

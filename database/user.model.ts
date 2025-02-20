@@ -1,6 +1,7 @@
 import mongoose, { Document, model, models, Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 interface IUser extends Document {
   name: string;
@@ -8,6 +9,9 @@ interface IUser extends Document {
   photo?: string;
   password: string;
   passwordConfirm: string;
+  passwordChangedAt: Date;
+  passwordResetToken: string;
+  passwordResetExpires: Date;
 }
 
 const userSchema: Schema = new mongoose.Schema<IUser>({
@@ -41,6 +45,16 @@ const userSchema: Schema = new mongoose.Schema<IUser>({
       message: "passwords are not the same",
     },
   },
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+});
+
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
 });
 
 userSchema.pre("save", async function (next) {
@@ -58,6 +72,19 @@ userSchema.methods.correctPassword = function (
   userPassword: string
 ) {
   return bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 const User = models?.User || model<IUser>("User", userSchema);

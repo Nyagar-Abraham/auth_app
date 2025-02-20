@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { LoginParams, SignupParams } from "../lib/types";
+import {
+  ForgotPasswordParams,
+  LoginParams,
+  ResetPasswordparams,
+  SignupParams,
+} from "../lib/types";
+import axios from "axios";
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -9,16 +15,14 @@ export function useAuth() {
   async function signup(userDetails: SignupParams) {
     setLoading(true);
     try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
+      const res = await axios.post("/api/signup", userDetails, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userDetails),
-        credentials: "include", // This ensures cookies are included in the request
+        withCredentials: true,
       });
 
-      if (!res.ok) throw new Error("Signup failed");
-
-      return await res.json();
+      return await res.data;
+    } catch (error) {
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -27,19 +31,54 @@ export function useAuth() {
   async function login(userDetails: LoginParams) {
     setLoading(true);
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
+      const res = await axios.post("/api/login", userDetails, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userDetails),
-        credentials: "include", // Include cookies in response
+        withCredentials: true,
       });
 
-      if (!res.ok) throw new Error("Login failed");
-      return await res.json();
+      return await res.data;
+    } catch (error) {
+      console.log(error);
     } finally {
       setLoading(false);
     }
   }
 
-  return { signup, login, loading };
+  async function forgotPassword(userDetails: ForgotPasswordParams) {
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/forgotPassword", userDetails, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
+
+      return await res.data;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function resetPassword(params: ResetPasswordparams) {
+    setLoading(true);
+    try {
+      const res = await axios.patch(
+        `/api/resetPassword/${params.token}`,
+        params.userDetails,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      return await res.data;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { resetPassword, forgotPassword, signup, login, loading };
 }
